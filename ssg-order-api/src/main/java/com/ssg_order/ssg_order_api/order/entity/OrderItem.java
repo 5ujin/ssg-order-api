@@ -64,8 +64,11 @@ public class OrderItem {
     private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ord_no", insertable = false, updatable = false)
+    @JoinColumn(name = "ord_sn", insertable = false, updatable = false)
     private Order order;
+
+    @Column(name = "ord_sn")
+    private Integer ordSn;
 
     @PrePersist
     public void onCreate() {

@@ -78,8 +78,8 @@ public class ExceptionHandler {
     }
 
     private String resolveErrorGroupCode(String path) {
-        if (path.contains("createOrder")) return "ORD_400";
-        if (path.contains("cancelOrder")) return "CLM_400";
+        if (path.startsWith("/order")) return "ORD_400";
+        if (path.startsWith("/claim")) return "CLM_400";
         return "GEN_400";
     }
 }

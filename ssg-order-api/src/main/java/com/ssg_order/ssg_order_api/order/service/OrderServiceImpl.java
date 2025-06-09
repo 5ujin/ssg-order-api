@@ -62,10 +62,10 @@ public class OrderServiceImpl implements OrderService{
 
             orderCreateResponse = buildOrderResponse(ordNo, orderItemList);
         } catch (BusinessException e) {
-            log.warn("비즈니스 예외 발생: {}", e.getMessage());
+            log.warn("BusinessException occurred: {}", e.getMessage());
             throw e;
         } catch (Exception e) {
-            log.error("주문 생성 중 알 수 없는 서버 오류", e);
+            log.error("Unexpected error during cancelOrderProduct", e);
             throw new BusinessException(ErrorCode.INTERNAL_ERROR);
         }
 
@@ -84,6 +84,9 @@ public class OrderServiceImpl implements OrderService{
     }
 
     private List<OrderItem> saveOrder(String ordNo, List<OrderCreateRequest.OrderCreateRequestItem> orderCreateRequestItemList) {
+        List<OrderItem> orderItemList = new ArrayList<>();
+        long totalPayAmt = 0L;
+
         // 주문 기본 저장
         Order order = Order.builder()
                 .ordNo(ordNo)
@@ -94,8 +97,6 @@ public class OrderServiceImpl implements OrderService{
                 .build();
 
         orderRepository.save(order);
-
-        List<OrderItem> orderItemList = new ArrayList<>();
 
         // 주문 상세 저장
         int index = 1; // 주문상세번호 채번용
@@ -110,7 +111,8 @@ public class OrderServiceImpl implements OrderService{
             product.decreaseStock(item.getOrdQty());
             productRepository.save(product);
 
-            Long payAmt = (product.getSalePrice() - product.getDiscountPrice()) * (long) item.getOrdQty();
+            long payAmt = (product.getSalePrice() - product.getDiscountPrice()) * (long) item.getOrdQty();
+            totalPayAmt += payAmt;
 
             OrderItem orderItem = OrderItem.builder()
                     .ordNo(ordNo)
@@ -131,6 +133,12 @@ public class OrderServiceImpl implements OrderService{
 
             index++;
         }
+
+        // 주문금액 정보 update
+        order.setTotalPayAmt(totalPayAmt);
+        order.setCancelableAmt(totalPayAmt);
+        orderRepository.save(order);
+
 
         return orderItemList;
     }

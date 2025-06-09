@@ -20,7 +20,7 @@ public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ord_sn")
-    private Long ordSn;
+    private int ordSn;
 
     @Column(name = "ord_no", nullable = false, unique = true)
     private String ordNo;
@@ -34,6 +34,12 @@ public class Order {
 
     @Column(name = "ord_cncl_dtime")
     private LocalDateTime ordCnclDtime;
+
+    @Column(name = "total_pay_amt")
+    private Long totalPayAmt;
+
+    @Column(name = "cancelable_amt")
+    private Long cancelableAmt;
 
     @Column(name = "user_id", nullable = false)
     private String userId;
