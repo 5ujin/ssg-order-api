@@ -17,7 +17,7 @@ public class OrderCreateRequest {
     @Data
     public static class OrderCreateRequestItem {
         @NotBlank
-        private String productNo;
+        private String prdNo;
 
         @Min(1)
         private int ordQty;

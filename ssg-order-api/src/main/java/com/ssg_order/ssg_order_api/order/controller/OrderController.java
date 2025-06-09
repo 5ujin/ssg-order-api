@@ -1,10 +1,12 @@
 package com.ssg_order.ssg_order_api.order.controller;
 
+import com.ssg_order.ssg_order_api.order.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.ssg_order.ssg_order_api.order.controller.dto.OrderCreateRequest;
 import com.ssg_order.ssg_order_api.order.controller.dto.OrderCreateResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +19,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class OrderController {
 
+    @Autowired
+    OrderService orderService;
+
     @PostMapping("/createOrder")
     @ResponseBody
     public ResponseEntity<OrderCreateResponse> createOrder(@RequestBody @Valid OrderCreateRequest orderCreateRequest) {
@@ -25,12 +30,12 @@ public class OrderController {
 
 
         log.info("주문 생성 요청, {}", orderCreateRequest);
-        OrderCreateResponse orderCreateResponse = OrderCreateResponse.builder()
-                .ordNo("2025060812345")
-                .totalAmt(10000L)
-                .orderCreateResponseItemList(List.of())
-                .build();
+        OrderCreateResponse orderCreateResponse = orderService.createOrder(orderCreateRequest);
         return ResponseEntity.ok(orderCreateResponse);
     }
+
+//    @PostMapping("/cancelOrder")
+//    @ResponseBody
+//    public ResponseEntity
 
 }

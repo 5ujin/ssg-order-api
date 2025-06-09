@@ -11,14 +11,15 @@ import java.util.List;
 @AllArgsConstructor
 public class OrderCreateResponse {
     private final String ordNo;
-    private final Long totalAmt;
+    private final Long totalSalePrice;
+    private final Long totalPayAmt;
     private List<OrderCreateResponseItem> orderCreateResponseItemList;
 
     @Getter
     @Builder
     @AllArgsConstructor
     public static class OrderCreateResponseItem {
-        private final String productNo;
+        private final String prdNo;
         private final Long payAmt;
     }
 }

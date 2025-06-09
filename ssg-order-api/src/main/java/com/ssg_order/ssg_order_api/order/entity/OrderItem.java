@@ -1,33 +1,37 @@
 package com.ssg_order.ssg_order_api.order.entity;
 
-import com.ssg_order.ssg_order_api.order.model.OrderStatus;
+import com.ssg_order.ssg_order_api.order.model.OrderDtlStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
-@Table(name = "od_order_base")
+@Table(name = "od_order_dtl")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Order {
+public class OrderItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ord_sn")
-    private Long ordSn;
+    @Column(name = "ord_dtl_sn")
+    private Long ordDtlSn;
 
-    @Column(name = "ord_no", nullable = false, unique = true)
-    private String ordNo;
+    @Column(name = "ord_no", nullable = false)
+    private String ordNo; // 주문번호
+
+    @Column(name = "ord_dtl_no", nullable = false)
+    private Integer ordDtlNo;
+
+    @Column(name = "prd_no", nullable = false)
+    private String prdNo;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "ord_status", nullable = false)
-    private OrderStatus ordStatus;
+    @Column(name = "ord_dtl_status", nullable = false)
+    private OrderDtlStatus ordDtlStatus;
 
     @Column(name = "ord_fin_dtime")
     private LocalDateTime ordFinDtime;
@@ -35,8 +39,17 @@ public class Order {
     @Column(name = "ord_cncl_dtime")
     private LocalDateTime ordCnclDtime;
 
-    @Column(name = "user_id", nullable = false)
-    private String userId;
+    @Column(name = "ord_qty", nullable = false)
+    private Integer ordQty;
+
+    @Column(name = "sale_price", nullable = false)
+    private Long salePrice;
+
+    @Column(name = "discount_price", nullable = false)
+    private Long discountPrice;
+
+    @Column(name = "pay_amt", nullable = false)
+    private Long payAmt;
 
     @Column(name = "creator", nullable = false)
     private String creator;
@@ -50,8 +63,9 @@ public class Order {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
-    private List<OrderItem> orderItems = new ArrayList<>();
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ord_no", insertable = false, updatable = false)
+    private Order order;
 
     @PrePersist
     public void onCreate() {
@@ -61,7 +75,6 @@ public class Order {
         this.ordFinDtime = now;
         this.creator = "sujin3100";
         this.updater = "sujin3100";
-        this.userId = "sujin3100";
     }
 
     @PreUpdate
