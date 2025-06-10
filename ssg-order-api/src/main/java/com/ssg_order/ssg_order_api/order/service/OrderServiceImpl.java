@@ -19,6 +19,7 @@ import com.ssg_order.ssg_order_api.product.entity.Product;
 import com.ssg_order.ssg_order_api.product.repository.ProductHistoryRepository;
 import com.ssg_order.ssg_order_api.product.repository.ProductRepository;
 import com.ssg_order.ssg_order_api.product.service.ProductService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +29,7 @@ import java.util.List;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService{
 
     private final ProductRepository productRepository;
@@ -38,21 +40,9 @@ public class OrderServiceImpl implements OrderService{
 
     private final OrderItemRepository orderItemRepository;
 
-    private final ProductHistoryRepository productHistoryRepository;
-
     private final OrderItemHistoryRepository orderItemHistoryRepository;
 
     private final ProductService productService;
-
-    public OrderServiceImpl(ProductRepository productRepository, OrderNoGenerator orderNoGenerator, OrderRepository orderRepository, OrderItemRepository orderItemRepository, ProductHistoryRepository productHistoryRepository, OrderItemHistoryRepository orderItemHistoryRepository, ProductService productService) {
-        this.productRepository = productRepository;
-        this.orderNoGenerator = orderNoGenerator;
-        this.orderRepository = orderRepository;
-        this.orderItemRepository = orderItemRepository;
-        this.productHistoryRepository = productHistoryRepository;
-        this.orderItemHistoryRepository = orderItemHistoryRepository;
-        this.productService = productService;
-    }
 
     @Override
     @Transactional

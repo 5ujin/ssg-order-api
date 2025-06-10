@@ -21,6 +21,7 @@ import com.ssg_order.ssg_order_api.order.service.OrderService;
 import com.ssg_order.ssg_order_api.product.entity.Product;
 import com.ssg_order.ssg_order_api.product.repository.ProductRepository;
 import com.ssg_order.ssg_order_api.product.service.ProductService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +31,7 @@ import java.util.List;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class ClaimServiceImpl implements ClaimService{
 
     private final OrderRepository orderRepository;
@@ -44,16 +46,6 @@ public class ClaimServiceImpl implements ClaimService{
     private final ProductService productService;
 
     private final OrderService orderService;
-
-    public ClaimServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository, ClaimRepository claimRepository, ClaimNoGenerator claimNoGenerator, ProductRepository productRepository, ProductService productService, OrderService orderService) {
-        this.orderRepository = orderRepository;
-        this.orderItemRepository = orderItemRepository;
-        this.claimRepository = claimRepository;
-        this.claimNoGenerator = claimNoGenerator;
-        this.productRepository = productRepository;
-        this.productService = productService;
-        this.orderService = orderService;
-    }
 
     @Override
     @Transactional
