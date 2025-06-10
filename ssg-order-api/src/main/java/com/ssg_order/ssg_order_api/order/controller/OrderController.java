@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RequestMapping("/order")
 @RequiredArgsConstructor
-@Tag(name = "주문 API", description = "주문 관련 기능 제공")
+@Tag(name = "주문 API", description = "주문생성 및 조회")
 public class OrderController {
 
     @Autowired
@@ -27,7 +27,7 @@ public class OrderController {
 
     @PostMapping("/createOrder")
     @ResponseBody
-    @Operation(summary = "주문 생성", description = "상품 번호와 수량으로 주문을 생성합니다.")
+    @Operation(summary = "주문 생성", description = "상품번호와 주문수량으로 주문을 생성합니다.")
     public ResponseEntity<OrderCreateRes> createOrder(@RequestBody @Valid OrderCreateReq orderCreateReq) {
 
         // TODO: 로그인 여부 확인(세션 또는 토큰 기반)
@@ -40,7 +40,7 @@ public class OrderController {
 
     @PostMapping("/orderList")
     @ResponseBody
-    @Operation(summary = "주문 조회", description = "주문번호로 주문 목록을 조회합니다.")
+    @Operation(summary = "주문 조회", description = "주문번호로 주문리스트를 조회합니다.")
     public ResponseEntity<OrderListRes> getOrderList(@RequestBody @Valid OrderListReq orderListReq) {
         // TODO: 로그인 여부 확인(세션 또는 토큰 기반)
 

@@ -7,10 +7,10 @@ import lombok.Data;
 @Data
 public class OrderCancelReq {
     @NotBlank
-    @Schema(description = "주문번호", example = "20250610-461756")
+    @Schema(description = "주문번호", example = "20250610-01428B")
     private final String ordNo;
 
     @NotBlank
-    @Schema(description = "상품번호", example = "1000000003")
+    @Schema(description = "상품번호", example = "1000000002")
     private final String prdNo;
 }

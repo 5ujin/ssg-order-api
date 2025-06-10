@@ -1,5 +1,7 @@
 package com.ssg_order.ssg_order_api.order.service;
 
+import com.ssg_order.ssg_order_api.common.exception.BusinessException;
+import com.ssg_order.ssg_order_api.common.exception.ErrorCode;
 import com.ssg_order.ssg_order_api.common.util.OrderNoGenerator;
 import com.ssg_order.ssg_order_api.order.controller.dto.OrderCreateReq;
 import com.ssg_order.ssg_order_api.order.controller.dto.OrderCreateReqItem;
@@ -25,6 +27,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,7 +48,7 @@ class OrderServiceTest {
     @Mock private ProductService productService;
 
     @Test
-    @DisplayName("정상 주문 생성 테스트")
+    @DisplayName("주문 성공")
     void createOrder_success() {
         // -----------------------------------
         // given
@@ -124,6 +128,83 @@ class OrderServiceTest {
         assertThat(payAmtMap.get(prdNo1)).isEqualTo(payAmt1);
         assertThat(payAmtMap.get(prdNo2)).isEqualTo(payAmt2);
 
+    }
+
+    @Test
+    @DisplayName("주문 실패 - 존재하지 않는 상품번호")
+    void createOrder_fail_invalidProductNo() {
+        // -----------------------------------
+        // GIVEN
+        // -----------------------------------
+        String invalidPrdNo = "INVALID_PRD001";
+        OrderCreateReqItem invalidItem = new OrderCreateReqItem();
+        invalidItem.setPrdNo(invalidPrdNo);
+        invalidItem.setOrdQty(2);
+
+        OrderCreateReq req = new OrderCreateReq();
+        req.setOrderCreateRequestItemList(List.of(invalidItem));
+
+        // 상품 미존재 상황
+        given(productRepository.findByPrdNo(invalidPrdNo)).willReturn(Optional.empty());
+
+        // -----------------------------------
+        // WHEN / THEN
+        // -----------------------------------
+        assertThatThrownBy(() -> orderService.createOrder(req))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining(ErrorCode.INVALID_PRODUCT_NO.getMessage());
+
+        try {
+            orderService.createOrder(req);
+            fail("예외가 발생해야 합니다");
+        } catch (BusinessException e) {
+            assertThat(e.getErrorCode()).isEqualTo(ErrorCode.INVALID_PRODUCT_NO);
+        }
+    }
+
+    @Test
+    @DisplayName("주문 실패 - 재고 부족")
+    void createOrder_fail_outOfStock() {
+        // -----------------------------------
+        // GIVEN
+        // -----------------------------------
+        String prdNo = "1000000003";
+        int orderQty = 300; // 재고보다 많은 수량
+        long salePrice = 3500L;
+        long discountPrice = 300L;
+
+        // 요청 DTO
+        OrderCreateReqItem item = new OrderCreateReqItem();
+        item.setPrdNo(prdNo);
+        item.setOrdQty(orderQty);
+
+        OrderCreateReq req = new OrderCreateReq();
+        req.setOrderCreateRequestItemList(List.of(item));
+
+        // 상품: 재고는 200개뿐
+        Product product = Product.builder()
+                .prdNo(prdNo)
+                .prdName("바나나 한 송이")
+                .stock(200) // 실제 재고 부족
+                .salePrice(salePrice)
+                .discountPrice(discountPrice)
+                .build();
+
+        given(productRepository.findByPrdNo(prdNo)).willReturn(Optional.of(product));
+
+        // -----------------------------------
+        // WHEN / THEN
+        // -----------------------------------
+        assertThatThrownBy(() -> orderService.createOrder(req))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining(ErrorCode.OUT_OF_STOCK.getMessage());
+
+        try {
+            orderService.createOrder(req);
+            fail("예외가 발생해야 합니다.");
+        } catch (BusinessException e) {
+            assertThat(e.getErrorCode()).isEqualTo(ErrorCode.OUT_OF_STOCK);
+        }
     }
 
 }

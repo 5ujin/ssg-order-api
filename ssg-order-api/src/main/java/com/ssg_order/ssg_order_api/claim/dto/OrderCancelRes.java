@@ -10,17 +10,17 @@ import lombok.Getter;
 @AllArgsConstructor
 public class OrderCancelRes {
 
-    @Schema(description = "상품번호", example = "1000000003")
+    @Schema(description = "상품번호", example = "1000000002")
     private final String prdNo;
-    @Schema(description = "상품명", example = "바나나 한 송이")
+    @Schema(description = "상품명", example = "신라면 멀티팩")
     private final String prdNm;
-    @Schema(description = "판매가격", example = "3500")
+    @Schema(description = "판매가격", example = "4200")
     private final Long salePrice;
-    @Schema(description = "할인금액", example = "300")
+    @Schema(description = "할인금액", example = "500")
     private final Long discountPrice;
-    @Schema(description = "환불금액", example = "3200")
+    @Schema(description = "환불금액", example = "8400")
     private final Long refundAmt;
-    @Schema(description = "취소가능금액", example = "2600")
+    @Schema(description = "남은환불가능금액", example = "20000")
     private final Long cancelableAmt;
 
 }

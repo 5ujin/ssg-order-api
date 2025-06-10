@@ -9,8 +9,8 @@ import lombok.Getter;
 @Builder
 @AllArgsConstructor
 public class OrderCreateResItem {
-    @Schema(description = "상품번호", example = "1000000003")
+    @Schema(description = "상품번호", example = "1000000002")
     private final String prdNo;
-    @Schema(description = "결제금액(실구매가)", example = "3200")
+    @Schema(description = "결제금액", example = "10000")
     private final Long payAmt;
 }

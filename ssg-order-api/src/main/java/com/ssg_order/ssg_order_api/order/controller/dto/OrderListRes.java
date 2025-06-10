@@ -12,27 +12,29 @@ import java.util.List;
 @AllArgsConstructor
 public class OrderListRes {
 
-    @Schema(description = "주문번호", example = "20250610-461756")
+    @Schema(description = "주문번호", example = "20250610-01428B")
     private final String ordNo;
-    @Schema(description = "총결제금액", example = "13200")
+    @Schema(description = "총결제금액", example = "34500")
     private final Long totalPayAmt;
-    @Schema(description = "환불금액", example = "3200")
+    @Schema(description = "환불금액", example = "16000")
     private final Long refundAmt;
     @Schema(
-            description = "주문상세리스트",
+            description = "주문상품리스트",
             example = """
                     [
                       {
-                        "prdNo": "1000000003",
-                        "prdNm": "바나나 한 송이",
-                        "ordQty": 1,
-                        "payAmt": 3200
+                        "prdNo": "1000000002",
+                        "prdNm": "신라면 멀티팩",
+                        "ordQty": 5,
+                        "payAmt": 16000,
+                        "ordDtlStatus": "COMPLETED"
                       },
                       {
-                        "prdNo": "1000000005",
-                        "prdNm": "오리온 초코파이",
-                        "ordQty": 3,
-                        "payAmt": 7800
+                        "prdNo": "1000000003",
+                        "prdNm": "바나나 한 송이",
+                        "ordQty": 2,
+                        "payAmt": 6400,
+                        "ordDtlStatus": "CANCELED"
                       }
                     ]"""
     )

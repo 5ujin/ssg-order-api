@@ -13,6 +13,19 @@ import java.util.List;
 public class OrderCreateReq {
 
     @NotEmpty
-    @Schema(description = "주문요청리스트", example = "[{\"prdNo\": \"1000000002\", \"ordQty\": 1}]")
+    @Schema(
+        description = "주문생성요청리스트",
+        example = """
+        [
+          {
+            "prdNo": "1000000002",
+            "ordQty": 1
+          },
+          {
+            "prdNo": "1000000005",
+            "ordQty": 3
+          }
+        ]"""
+    )
     private List<@Valid OrderCreateReqItem> orderCreateRequestItemList;
 }

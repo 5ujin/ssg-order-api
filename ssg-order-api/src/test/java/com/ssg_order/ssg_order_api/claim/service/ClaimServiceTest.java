@@ -3,6 +3,8 @@ package com.ssg_order.ssg_order_api.claim.service;
 import com.ssg_order.ssg_order_api.claim.dto.OrderCancelReq;
 import com.ssg_order.ssg_order_api.claim.dto.OrderCancelRes;
 import com.ssg_order.ssg_order_api.claim.repository.ClaimRepository;
+import com.ssg_order.ssg_order_api.common.exception.BusinessException;
+import com.ssg_order.ssg_order_api.common.exception.ErrorCode;
 import com.ssg_order.ssg_order_api.common.util.ClaimNoGenerator;
 import com.ssg_order.ssg_order_api.order.entity.Order;
 import com.ssg_order.ssg_order_api.order.entity.OrderItem;
@@ -24,6 +26,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,7 +49,7 @@ class ClaimServiceTest {
     @Mock private OrderService orderService;
 
     @Test
-    @DisplayName("정상주문취소 테스트")
+    @DisplayName("주문 취소 성공")
     void orderCancel_success() {
         // -----------------------------------
         // GIVEN
@@ -115,5 +119,121 @@ class ClaimServiceTest {
         // 상품 이력 저장 + 재고 복원 확인
         verify(productService, times(1)).saveProductHistory(product);
         assertThat(product.getStock()).isEqualTo(102); // 복원됨
+    }
+
+    @Test
+    @DisplayName("주문 취소 실패 - 존재하지 않는 주문번호")
+    void orderCancel_fail_invalidOrderNo() {
+        // -----------------------------------
+        // GIVEN
+        // -----------------------------------
+        String invalidOrdNo = "NOT_EXIST_ORD001";
+        String prdNo = "1000000002";
+
+        OrderCancelReq req = new OrderCancelReq(invalidOrdNo, prdNo);
+
+        // 주문번호 조회 결과 없음
+        given(orderRepository.findByOrdNo(invalidOrdNo)).willReturn(Optional.empty());
+
+        // -----------------------------------
+        // WHEN / THEN
+        // -----------------------------------
+        assertThatThrownBy(() -> claimService.orderCancel(req))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining(ErrorCode.INVALID_ORD_NO.getMessage());
+
+        // 또는 예외코드 명확 검증
+        try {
+            claimService.orderCancel(req);
+            fail("예외가 발생해야 합니다.");
+        } catch (BusinessException e) {
+            assertThat(e.getErrorCode()).isEqualTo(ErrorCode.INVALID_ORD_NO);
+        }
+    }
+
+    @Test
+    @DisplayName("주문 취소 실패 - 주문에 없는 상품번호")
+    void orderCancel_fail_invalidOrderProduct() {
+        // -----------------------------------
+        // GIVEN
+        // -----------------------------------
+        String ordNo = "ORD_EXISTING_001";
+        String prdNo = "1000000999"; // 주문 내역에 없는 상품번호
+
+        Order order = Order.builder()
+                .ordNo(ordNo)
+                .ordSn(1)
+                .ordStatus(OrderStatus.COMPLETED)
+                .cancelableAmt(10000L)
+                .build();
+
+        OrderCancelReq req = new OrderCancelReq(ordNo, prdNo);
+
+        // 주문은 존재하나, 해당 상품번호는 주문에 없음
+        given(orderRepository.findByOrdNo(ordNo)).willReturn(Optional.of(order));
+        given(orderItemRepository.findByOrdNoAndPrdNo(ordNo, prdNo)).willReturn(Optional.empty());
+
+        // -----------------------------------
+        // WHEN / THEN
+        // -----------------------------------
+        assertThatThrownBy(() -> claimService.orderCancel(req))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining(ErrorCode.INVALID_ORDER_PRODUCT.getMessage());
+
+        // 또는 에러코드 정확히 검증
+        try {
+            claimService.orderCancel(req);
+            fail("예외가 발생해야 합니다.");
+        } catch (BusinessException e) {
+            assertThat(e.getErrorCode()).isEqualTo(ErrorCode.INVALID_ORDER_PRODUCT);
+        }
+    }
+
+    @Test
+    @DisplayName("주문 취소 실패 - 이미 취소된 상품")
+    void orderCancel_fail_alreadyCanceled() {
+        // -----------------------------------
+        // GIVEN
+        // -----------------------------------
+        String ordNo = "ORD_EXISTING_002";
+        String prdNo = "1000000003";
+
+        Order order = Order.builder()
+                .ordNo(ordNo)
+                .ordSn(1)
+                .ordStatus(OrderStatus.PARTIALLY_CANCELED)
+                .cancelableAmt(10000L)
+                .build();
+
+        OrderItem canceledItem = OrderItem.builder()
+                .ordNo(ordNo)
+                .prdNo(prdNo)
+                .ordQty(1)
+                .salePrice(3500L)
+                .discountPrice(300L)
+                .payAmt(3200L)
+                .ordDtlStatus(OrderDtlStatus.CANCELED) // 이미 취소 상태
+                .build();
+
+        OrderCancelReq req = new OrderCancelReq(ordNo, prdNo);
+
+        // Mock 설정
+        given(orderRepository.findByOrdNo(ordNo)).willReturn(Optional.of(order));
+        given(orderItemRepository.findByOrdNoAndPrdNo(ordNo, prdNo)).willReturn(Optional.of(canceledItem));
+
+        // -----------------------------------
+        // WHEN / THEN
+        // -----------------------------------
+        assertThatThrownBy(() -> claimService.orderCancel(req))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining(ErrorCode.ALREADY_CANCELED_PRODUCT.getMessage());
+
+        // 또는 예외코드 명확 검증
+        try {
+            claimService.orderCancel(req);
+            fail("예외가 발생해야 합니다.");
+        } catch (BusinessException e) {
+            assertThat(e.getErrorCode()).isEqualTo(ErrorCode.ALREADY_CANCELED_PRODUCT);
+        }
     }
 }
