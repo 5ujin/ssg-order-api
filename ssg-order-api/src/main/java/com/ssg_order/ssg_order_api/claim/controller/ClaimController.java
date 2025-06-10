@@ -1,7 +1,7 @@
 package com.ssg_order.ssg_order_api.claim.controller;
 
-import com.ssg_order.ssg_order_api.claim.controller.dto.OrderCancelRequest;
-import com.ssg_order.ssg_order_api.claim.controller.dto.OrderCancelResponse;
+import com.ssg_order.ssg_order_api.claim.dto.OrderCancelRequest;
+import com.ssg_order.ssg_order_api.claim.dto.OrderCancelResponse;
 import com.ssg_order.ssg_order_api.claim.service.ClaimService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +24,6 @@ public class ClaimController {
 
         log.info("주문 취소 요청, {}", orderCancelRequest);
         OrderCancelResponse orderCancelResponse = claimService.orderCancel(orderCancelRequest);
-        return ResponseEntity.ok(null);
+        return ResponseEntity.ok(orderCancelResponse);
     }
 }

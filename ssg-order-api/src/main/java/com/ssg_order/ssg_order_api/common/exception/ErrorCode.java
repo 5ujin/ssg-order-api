@@ -18,7 +18,8 @@ public enum ErrorCode {
     DUPLICATED_ORDER("ORD_409_01", 409,  "이미 처리된 주문입니다."),
 
     INVALID_ORDER_PRODUCT("CLM_404_01", 404, "해당 주문에 해당 상품이 존재하지 않습니다."),
-    ALREADY_CANCELED_PRODUCT("CLM_400_01", 400, "이미 취소된 상품입니다.");
+    ALREADY_CANCELED_PRODUCT("CLM_400_01", 400, "이미 취소된 상품입니다."),
+    DUPLICATED_CLAIM("CLM_409_01", 409, "이미 처리된 클레임입니다.");
 
     private final String code;
     private final int status;

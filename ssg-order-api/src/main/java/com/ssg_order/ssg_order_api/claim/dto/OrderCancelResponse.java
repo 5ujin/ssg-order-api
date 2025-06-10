@@ -1,4 +1,4 @@
-package com.ssg_order.ssg_order_api.claim.controller.dto;
+package com.ssg_order.ssg_order_api.claim.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

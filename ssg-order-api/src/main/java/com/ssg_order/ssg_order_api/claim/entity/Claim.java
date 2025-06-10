@@ -1,5 +1,8 @@
 package com.ssg_order.ssg_order_api.claim.entity;
 
+import com.ssg_order.ssg_order_api.claim.model.ClaimReason;
+import com.ssg_order.ssg_order_api.claim.model.ClaimStatus;
+import com.ssg_order.ssg_order_api.claim.model.ClaimType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,14 +31,17 @@ public class Claim {
     @Column(name = "ord_dtl_no", nullable = false)
     private Integer ordDtlNo;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "claim_type", nullable = false)
-    private String claimType;
+    private ClaimType claimType;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "claim_status", nullable = false)
-    private String claimStatus;
+    private ClaimStatus claimStatus;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "claim_reason")
-    private String claimReason;
+    private ClaimReason claimReason;
 
     @Column(name = "prd_no", nullable = false)
     private String prdNo;
@@ -50,7 +56,7 @@ public class Claim {
     private LocalDateTime claimFinDtime;
 
     @Column(name = "refund_amt")
-    private Integer refundAmt;
+    private Long refundAmt;
 
     @Column(name = "creator", nullable = false, updatable = false)
     private String creator;

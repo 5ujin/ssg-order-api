@@ -15,6 +15,7 @@ import com.ssg_order.ssg_order_api.product.entity.Product;
 import com.ssg_order.ssg_order_api.product.entity.ProductHistory;
 import com.ssg_order.ssg_order_api.product.repository.ProductHistoryRepository;
 import com.ssg_order.ssg_order_api.product.repository.ProductRepository;
+import com.ssg_order.ssg_order_api.product.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,12 +37,15 @@ public class OrderServiceImpl implements OrderService{
 
     private final ProductHistoryRepository productHistoryRepository;
 
-    public OrderServiceImpl(ProductRepository productRepository, OrderNoGenerator orderNoGenerator, OrderRepository orderRepository, OrderItemRepository orderItemRepository, ProductHistoryRepository productHistoryRepository) {
+    private final ProductService productService;
+
+    public OrderServiceImpl(ProductRepository productRepository, OrderNoGenerator orderNoGenerator, OrderRepository orderRepository, OrderItemRepository orderItemRepository, ProductHistoryRepository productHistoryRepository, ProductService productService) {
         this.productRepository = productRepository;
         this.orderNoGenerator = orderNoGenerator;
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.productHistoryRepository = productHistoryRepository;
+        this.productService = productService;
     }
 
     @Override
@@ -105,11 +109,10 @@ public class OrderServiceImpl implements OrderService{
                     .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_PRODUCT_NO));
 
             // 상품 이력 저장
-            saveProductHistory(product);
+            productService.saveProductHistory(product);
 
             // 재고 차감
             product.decreaseStock(item.getOrdQty());
-            productRepository.save(product);
 
             long payAmt = (product.getSalePrice() - product.getDiscountPrice()) * (long) item.getOrdQty();
             totalPayAmt += payAmt;
@@ -166,21 +169,4 @@ public class OrderServiceImpl implements OrderService{
                 .build();
     }
 
-    private void saveProductHistory(Product product) {
-        ProductHistory productHistory = ProductHistory.builder()
-                .prdSn(product.getPrdSn())
-                .prdNo(product.getPrdNo())
-                .prdName(product.getPrdName())
-                .salePrice(product.getSalePrice())
-                .discountPrice(product.getDiscountPrice())
-                .stock(product.getStock()) // 차감 전 재고
-                .creator(product.getCreator())
-                .createdAt(product.getCreatedAt())
-                .updater(product.getUpdater())
-                .updatedAt(product.getUpdatedAt())
-                .histCreator("sujin3100")
-                .build();
-
-        productHistoryRepository.save(productHistory);
-    }
 }
