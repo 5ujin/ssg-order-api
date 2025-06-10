@@ -11,6 +11,7 @@ public enum ErrorCode {
     INVALID_PARAM("GEN_400", 400, "필수 파라미터가 누락되었습니다."),
     INVALID_ORD_NO("GEN_404", 404, "유효하지 않은 주문번호입니다."),
     INTERNAL_ERROR("GEN_500", 500, "알 수 없는 서버 오류입니다."),
+    OPTIMISTIC_LOCK_CONFLICT("GEN_409", 409, "동일한 자원에 대해 동시에 요청이 발생했습니다. 잠시 후 다시 시도해주세요."),
 
     INVALID_QTY("ORD_400_01", 400,"주문 수량은 1 이상이어야합니다."),
     OUT_OF_STOCK("ORD_400_02", 400,"상품 재고가 부족합니다."),

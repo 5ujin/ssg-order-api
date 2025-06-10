@@ -16,6 +16,7 @@ import com.ssg_order.ssg_order_api.product.entity.Product;
 import com.ssg_order.ssg_order_api.product.repository.ProductHistoryRepository;
 import com.ssg_order.ssg_order_api.product.repository.ProductRepository;
 import com.ssg_order.ssg_order_api.product.service.ProductService;
+import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -44,26 +45,36 @@ public class OrderServiceImpl implements OrderService{
     @Override
     @Transactional
     public OrderCreateRes createOrder(OrderCreateReq orderCreateReq) {
-        try {
-            List<OrderCreateReqItem> orderCreateRequestItemList = orderCreateReq.getOrderCreateRequestItemList();
+        int retry = 3;
+        while (retry-- > 0) {
+            try {
+                List<OrderCreateReqItem> orderCreateRequestItemList = orderCreateReq.getOrderCreateRequestItemList();
 
-            // 1. 유효성 검사(상품 존재 여부, 재고)
-            validateProductsAndStock(orderCreateRequestItemList);
+                // 1. 유효성 검사(상품 존재 여부, 재고)
+                validateProductsAndStock(orderCreateRequestItemList);
 
-            // 2. 주문번호 채번
-            String ordNo = orderNoGenerator.generateOrderNo();
+                // 2. 주문번호 채번
+                String ordNo = orderNoGenerator.generateOrderNo();
 
-            // 3. 주문저장
-            List<OrderItem> orderItemList = saveOrder(ordNo, orderCreateRequestItemList);
+                // 3. 주문저장
+                List<OrderItem> orderItemList = saveOrder(ordNo, orderCreateRequestItemList);
 
-            return buildOrderResponse(ordNo, orderItemList);
-        } catch (BusinessException e) {
-            log.warn("BusinessException occurred: {}", e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            log.error("Unexpected error during cancelOrderProduct", e);
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR);
+                return buildOrderResponse(ordNo, orderItemList);
+            } catch (OptimisticLockException e) {
+                log.warn("낙관적 락 충돌 발생! 재시도 남음: {}", retry);
+                if (retry == 0) {
+                    throw new BusinessException(ErrorCode.OPTIMISTIC_LOCK_CONFLICT);
+                }
+            } catch (BusinessException e) {
+                log.warn("BusinessException occurred: {}", e.getMessage());
+                throw e;
+            } catch (Exception e) {
+                log.error("Unexpected error during cancelOrderProduct", e);
+                throw new BusinessException(ErrorCode.INTERNAL_ERROR);
+            }
         }
+
+        throw new BusinessException(ErrorCode.INTERNAL_ERROR);
     }
 
     private void validateProductsAndStock(List<OrderCreateReqItem> itemList) {
@@ -103,6 +114,7 @@ public class OrderServiceImpl implements OrderService{
 
             // 재고 차감
             product.decreaseStock(item.getOrdQty());
+            productRepository.save(product);
 
             long payAmt = (product.getSalePrice() - product.getDiscountPrice()) * (long) item.getOrdQty();
             totalPayAmt += payAmt;

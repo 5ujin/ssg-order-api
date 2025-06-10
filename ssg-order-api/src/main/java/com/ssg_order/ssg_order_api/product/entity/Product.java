@@ -73,4 +73,8 @@ public class Product {
         this.updatedAt = LocalDateTime.now();
         this.updater = "sujin3100";
     }
+
+    @Version
+    @Column(name = "version")
+    private Long version;
 }
