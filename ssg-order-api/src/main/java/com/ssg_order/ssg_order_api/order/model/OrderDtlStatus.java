@@ -19,4 +19,8 @@ public enum OrderDtlStatus {
     public String getDescription() {
         return description;
     }
+
+    public boolean isCanceled() {
+        return this == CANCELED; // 추후 다른 클레임 완료 상태에 대해서도 추가
+    }
 }

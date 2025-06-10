@@ -3,16 +3,19 @@ package com.ssg_order.ssg_order_api.order.service;
 import com.ssg_order.ssg_order_api.common.exception.BusinessException;
 import com.ssg_order.ssg_order_api.common.exception.ErrorCode;
 import com.ssg_order.ssg_order_api.common.util.OrderNoGenerator;
-import com.ssg_order.ssg_order_api.order.controller.dto.OrderCreateRequest;
-import com.ssg_order.ssg_order_api.order.controller.dto.OrderCreateResponse;
+import com.ssg_order.ssg_order_api.order.controller.dto.OrderCreateReq;
+import com.ssg_order.ssg_order_api.order.controller.dto.OrderCreateRes;
+import com.ssg_order.ssg_order_api.order.controller.dto.OrderListReq;
+import com.ssg_order.ssg_order_api.order.controller.dto.OrderListRes;
 import com.ssg_order.ssg_order_api.order.entity.Order;
 import com.ssg_order.ssg_order_api.order.entity.OrderItem;
+import com.ssg_order.ssg_order_api.order.entity.OrderItemHistory;
 import com.ssg_order.ssg_order_api.order.model.OrderDtlStatus;
 import com.ssg_order.ssg_order_api.order.model.OrderStatus;
+import com.ssg_order.ssg_order_api.order.repository.OrderItemHistoryRepository;
 import com.ssg_order.ssg_order_api.order.repository.OrderItemRepository;
 import com.ssg_order.ssg_order_api.order.repository.OrderRepository;
 import com.ssg_order.ssg_order_api.product.entity.Product;
-import com.ssg_order.ssg_order_api.product.entity.ProductHistory;
 import com.ssg_order.ssg_order_api.product.repository.ProductHistoryRepository;
 import com.ssg_order.ssg_order_api.product.repository.ProductRepository;
 import com.ssg_order.ssg_order_api.product.service.ProductService;
@@ -37,23 +40,25 @@ public class OrderServiceImpl implements OrderService{
 
     private final ProductHistoryRepository productHistoryRepository;
 
+    private final OrderItemHistoryRepository orderItemHistoryRepository;
+
     private final ProductService productService;
 
-    public OrderServiceImpl(ProductRepository productRepository, OrderNoGenerator orderNoGenerator, OrderRepository orderRepository, OrderItemRepository orderItemRepository, ProductHistoryRepository productHistoryRepository, ProductService productService) {
+    public OrderServiceImpl(ProductRepository productRepository, OrderNoGenerator orderNoGenerator, OrderRepository orderRepository, OrderItemRepository orderItemRepository, ProductHistoryRepository productHistoryRepository, OrderItemHistoryRepository orderItemHistoryRepository, ProductService productService) {
         this.productRepository = productRepository;
         this.orderNoGenerator = orderNoGenerator;
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.productHistoryRepository = productHistoryRepository;
+        this.orderItemHistoryRepository = orderItemHistoryRepository;
         this.productService = productService;
     }
 
     @Override
     @Transactional
-    public OrderCreateResponse createOrder(OrderCreateRequest orderCreateRequest) {
-        OrderCreateResponse orderCreateResponse = null;
+    public OrderCreateRes createOrder(OrderCreateReq orderCreateReq) {
         try {
-            List<OrderCreateRequest.OrderCreateRequestItem> orderCreateRequestItemList = orderCreateRequest.getOrderCreateRequestItemList();
+            List<OrderCreateReq.OrderCreateRequestItem> orderCreateRequestItemList = orderCreateReq.getOrderCreateRequestItemList();
 
             // 1. 유효성 검사(상품 존재 여부, 재고)
             validateProductsAndStock(orderCreateRequestItemList);
@@ -64,7 +69,7 @@ public class OrderServiceImpl implements OrderService{
             // 3. 주문저장
             List<OrderItem> orderItemList = saveOrder(ordNo, orderCreateRequestItemList);
 
-            orderCreateResponse = buildOrderResponse(ordNo, orderItemList);
+            return buildOrderResponse(ordNo, orderItemList);
         } catch (BusinessException e) {
             log.warn("BusinessException occurred: {}", e.getMessage());
             throw e;
@@ -72,12 +77,10 @@ public class OrderServiceImpl implements OrderService{
             log.error("Unexpected error during cancelOrderProduct", e);
             throw new BusinessException(ErrorCode.INTERNAL_ERROR);
         }
-
-        return orderCreateResponse;
     }
 
-    private void validateProductsAndStock(List<OrderCreateRequest.OrderCreateRequestItem> itemList) {
-        for (OrderCreateRequest.OrderCreateRequestItem item : itemList) {
+    private void validateProductsAndStock(List<OrderCreateReq.OrderCreateRequestItem> itemList) {
+        for (OrderCreateReq.OrderCreateRequestItem item : itemList) {
             Product product = productRepository.findByPrdNo(item.getPrdNo())
                     .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_PRODUCT_NO));
 
@@ -87,7 +90,7 @@ public class OrderServiceImpl implements OrderService{
         }
     }
 
-    private List<OrderItem> saveOrder(String ordNo, List<OrderCreateRequest.OrderCreateRequestItem> orderCreateRequestItemList) {
+    private List<OrderItem> saveOrder(String ordNo, List<OrderCreateReq.OrderCreateRequestItem> orderCreateRequestItemList) {
         List<OrderItem> orderItemList = new ArrayList<>();
         long totalPayAmt = 0L;
 
@@ -95,7 +98,7 @@ public class OrderServiceImpl implements OrderService{
         Order order = Order.builder()
                 .ordNo(ordNo)
                 .userId("sujin3100")
-                .ordStatus(OrderStatus.CREATED)
+                .ordStatus(OrderStatus.COMPLETED)
                 .creator("sujin3100")
                 .updater("sujin3100")
                 .build();
@@ -104,7 +107,7 @@ public class OrderServiceImpl implements OrderService{
 
         // 주문 상세 저장
         int index = 1; // 주문상세번호 채번용
-        for (OrderCreateRequest.OrderCreateRequestItem item: orderCreateRequestItemList) {
+        for (OrderCreateReq.OrderCreateRequestItem item: orderCreateRequestItemList) {
             Product product = productRepository.findByPrdNo(item.getPrdNo())
                     .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_PRODUCT_NO));
 
@@ -118,6 +121,7 @@ public class OrderServiceImpl implements OrderService{
             totalPayAmt += payAmt;
 
             OrderItem orderItem = OrderItem.builder()
+                    .ordSn(order.getOrdSn())
                     .ordNo(ordNo)
                     .ordDtlNo(index)
                     .ordDtlStatus(OrderDtlStatus.ORDERED)
@@ -146,9 +150,9 @@ public class OrderServiceImpl implements OrderService{
         return orderItemList;
     }
 
-    private OrderCreateResponse buildOrderResponse(String ordNo, List<OrderItem> orderItemList) {
-        List<OrderCreateResponse.OrderCreateResponseItem> orderCreateResponseItemList = orderItemList.stream()
-                .map(item -> OrderCreateResponse.OrderCreateResponseItem.builder()
+    private OrderCreateRes buildOrderResponse(String ordNo, List<OrderItem> orderItemList) {
+        List<OrderCreateRes.OrderCreateResItem> orderCreateResponseItemList = orderItemList.stream()
+                .map(item -> OrderCreateRes.OrderCreateResItem.builder()
                         .prdNo(item.getPrdNo())
                         .payAmt(item.getPayAmt())
                         .build())
@@ -161,7 +165,7 @@ public class OrderServiceImpl implements OrderService{
                 .mapToLong(OrderItem::getPayAmt)
                 .sum();
 
-        return OrderCreateResponse.builder()
+        return OrderCreateRes.builder()
                 .ordNo(ordNo)
                 .totalSalePrice(totalSalePrice)
                 .totalPayAmt(totalPayAmt)
@@ -169,4 +173,75 @@ public class OrderServiceImpl implements OrderService{
                 .build();
     }
 
+    @Override
+    @Transactional
+    public void saveOrderDtlHistory(OrderItem orderItem) {
+        OrderItemHistory history = OrderItemHistory.builder()
+                .ordDtlSn(orderItem.getOrdDtlSn())
+                .ordNo(orderItem.getOrdNo())
+                .ordDtlNo(orderItem.getOrdDtlNo())
+                .prdNo(Long.parseLong(orderItem.getPrdNo())) // 타입 변환 주의!
+                .ordDtlStatus(orderItem.getOrdDtlStatus())
+                .ordFinDtime(orderItem.getOrdFinDtime())
+                .ordCnclDtime(orderItem.getOrdCnclDtime())
+                .ordQty(orderItem.getOrdQty())
+                .salePrice(orderItem.getSalePrice().intValue()) // Long → Integer 변환
+                .discountPrice(orderItem.getDiscountPrice().intValue())
+                .payAmt(orderItem.getPayAmt().intValue())
+                .creator(orderItem.getCreator())
+                .createdAt(orderItem.getCreatedAt())
+                .updater(orderItem.getUpdater())
+                .updatedAt(orderItem.getUpdatedAt())
+                .build();
+
+        orderItemHistoryRepository.save(history);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public OrderListRes orderList(OrderListReq orderListReq) {
+        try {
+            String ordNo = orderListReq.getOrdNo();
+            // 1. 주문번호 유효성 검사
+            Order order = orderRepository.findByOrdNo(ordNo)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_ORD_NO));
+
+            // 2. 주문 리스트 조회
+            List<OrderItem> orderItemList = order.getOrderItems();
+
+            // 3. 응닶값 빌드
+            List<OrderListRes.OrderProductResItem> productResItems = orderItemList.stream()
+                    .map(item -> {
+                        Product product = productRepository.findByPrdNo(item.getPrdNo())
+                                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_PRODUCT_NO));
+                        return OrderListRes.OrderProductResItem.builder()
+                                .prdNo(product.getPrdNo())
+                                .prdNm(product.getPrdName())
+                                .ordQty(item.getOrdQty())
+                                .payAmt(item.getPayAmt())
+                                .build();
+                    })
+                    .toList();
+
+            long refundAmt = orderItemList.stream()
+                    .filter(item -> item.getOrdDtlStatus().isCanceled())
+                    .mapToLong(OrderItem::getPayAmt)
+                    .sum();
+
+            return OrderListRes.builder()
+                    .ordNo(order.getOrdNo())
+                    .totalPayAmt(order.getTotalPayAmt())
+                    .refundAmt(refundAmt)
+                    .orderProductResItemList(productResItems)
+                    .build();
+
+        } catch (BusinessException e) {
+            log.warn("BusinessException occurred: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Unexpected error during cancelOrderProduct", e);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR);
+        }
+
+    }
 }

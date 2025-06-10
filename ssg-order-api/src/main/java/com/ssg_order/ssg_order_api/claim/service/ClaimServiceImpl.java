@@ -1,8 +1,8 @@
 package com.ssg_order.ssg_order_api.claim.service;
 
 import com.ssg_order.ssg_order_api.claim.dto.ClaimValidationResult;
-import com.ssg_order.ssg_order_api.claim.dto.OrderCancelRequest;
-import com.ssg_order.ssg_order_api.claim.dto.OrderCancelResponse;
+import com.ssg_order.ssg_order_api.claim.dto.OrderCancelReq;
+import com.ssg_order.ssg_order_api.claim.dto.OrderCancelRes;
 import com.ssg_order.ssg_order_api.claim.entity.Claim;
 import com.ssg_order.ssg_order_api.claim.model.ClaimReason;
 import com.ssg_order.ssg_order_api.claim.model.ClaimStatus;
@@ -17,6 +17,7 @@ import com.ssg_order.ssg_order_api.order.model.OrderDtlStatus;
 import com.ssg_order.ssg_order_api.order.model.OrderStatus;
 import com.ssg_order.ssg_order_api.order.repository.OrderItemRepository;
 import com.ssg_order.ssg_order_api.order.repository.OrderRepository;
+import com.ssg_order.ssg_order_api.order.service.OrderService;
 import com.ssg_order.ssg_order_api.product.entity.Product;
 import com.ssg_order.ssg_order_api.product.repository.ProductRepository;
 import com.ssg_order.ssg_order_api.product.service.ProductService;
@@ -42,22 +43,24 @@ public class ClaimServiceImpl implements ClaimService{
 
     private final ProductService productService;
 
-    public ClaimServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository, ClaimRepository claimRepository, ClaimNoGenerator claimNoGenerator, ProductRepository productRepository, ProductService productService) {
+    private final OrderService orderService;
+
+    public ClaimServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository, ClaimRepository claimRepository, ClaimNoGenerator claimNoGenerator, ProductRepository productRepository, ProductService productService, OrderService orderService) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.claimRepository = claimRepository;
         this.claimNoGenerator = claimNoGenerator;
         this.productRepository = productRepository;
         this.productService = productService;
+        this.orderService = orderService;
     }
 
     @Override
     @Transactional
-    public OrderCancelResponse orderCancel(OrderCancelRequest orderCancelRequest) {
-        OrderCancelResponse orderCancelResponse = null;
+    public OrderCancelRes orderCancel(OrderCancelReq orderCancelReq) {
         try {
-            String ordNo = orderCancelRequest.getOrdNo();
-            String prdNo = orderCancelRequest.getPrdNo();
+            String ordNo = orderCancelReq.getOrdNo();
+            String prdNo = orderCancelReq.getPrdNo();
 
             // 1. 취소 가능 여부 확인
             ClaimValidationResult claimValidationResult = validateOrderAndProduct(ordNo, prdNo);
@@ -75,7 +78,7 @@ public class ClaimServiceImpl implements ClaimService{
             restoreProductStock(claimValidationResult.getOrderItem());
 
             // 6. 응답 생성
-            orderCancelResponse = buildClaimResponse(claimValidationResult);
+            return buildClaimResponse(claimValidationResult);
 
         } catch (BusinessException e) {
             log.warn("BusinessException occurred: {}", e.getMessage(), e);
@@ -84,7 +87,6 @@ public class ClaimServiceImpl implements ClaimService{
             log.error("Unexpected error during cancelOrderProduct", e);
             throw new BusinessException(ErrorCode.INTERNAL_ERROR);
         }
-        return orderCancelResponse;
     }
 
     private ClaimValidationResult validateOrderAndProduct(String ordNo, String prdNo) {
@@ -131,6 +133,9 @@ public class ClaimServiceImpl implements ClaimService{
         Order order = claimValidationResult.getOrder();
         OrderItem orderItem = claimValidationResult.getOrderItem();
 
+        // 0. 주문상세이력 저장
+        orderService.saveOrderDtlHistory(orderItem);
+
         // 1. 주문상세 상태 업데이트
         orderItem.setOrdDtlStatus(OrderDtlStatus.CANCELED);
         orderItem.setOrdCnclDtime(LocalDateTime.now());
@@ -163,14 +168,14 @@ public class ClaimServiceImpl implements ClaimService{
         product.increaseStock(orderItem.getOrdQty());
     }
 
-    private OrderCancelResponse buildClaimResponse(ClaimValidationResult claimValidationResult) {
+    private OrderCancelRes buildClaimResponse(ClaimValidationResult claimValidationResult) {
         Order order = claimValidationResult.getOrder();
         OrderItem orderItem = claimValidationResult.getOrderItem();
 
         Product product = productRepository.findByPrdNo(orderItem.getPrdNo())
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_PRODUCT_NO));
 
-        return OrderCancelResponse.builder()
+        return OrderCancelRes.builder()
                 .prdNo(orderItem.getPrdNo())
                 .prdNm(product.getPrdName())
                 .salePrice(orderItem.getSalePrice())

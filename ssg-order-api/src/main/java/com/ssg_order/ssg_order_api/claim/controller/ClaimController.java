@@ -1,7 +1,7 @@
 package com.ssg_order.ssg_order_api.claim.controller;
 
-import com.ssg_order.ssg_order_api.claim.dto.OrderCancelRequest;
-import com.ssg_order.ssg_order_api.claim.dto.OrderCancelResponse;
+import com.ssg_order.ssg_order_api.claim.dto.OrderCancelReq;
+import com.ssg_order.ssg_order_api.claim.dto.OrderCancelRes;
 import com.ssg_order.ssg_order_api.claim.service.ClaimService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,11 +19,11 @@ public class ClaimController {
 
     @PostMapping("/cancelOrder")
     @ResponseBody
-    public ResponseEntity<OrderCancelResponse> cancelOrder(@RequestBody @Valid OrderCancelRequest orderCancelRequest) {
+    public ResponseEntity<OrderCancelRes> cancelOrder(@RequestBody @Valid OrderCancelReq orderCancelReq) {
         // TODO: 로그인 여부 확인(세션 또는 토큰 기반)
 
-        log.info("주문 취소 요청, {}", orderCancelRequest);
-        OrderCancelResponse orderCancelResponse = claimService.orderCancel(orderCancelRequest);
-        return ResponseEntity.ok(orderCancelResponse);
+        log.info("주문 취소 요청, {}", orderCancelReq);
+        OrderCancelRes orderCancelRes = claimService.orderCancel(orderCancelReq);
+        return ResponseEntity.ok(orderCancelRes);
     }
 }

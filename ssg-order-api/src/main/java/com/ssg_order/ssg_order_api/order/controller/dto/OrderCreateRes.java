@@ -9,16 +9,16 @@ import java.util.List;
 @Getter
 @Builder
 @AllArgsConstructor
-public class OrderCreateResponse {
+public class OrderCreateRes {
     private final String ordNo;
     private final Long totalSalePrice;
     private final Long totalPayAmt;
-    private List<OrderCreateResponseItem> orderCreateResponseItemList;
+    private List<OrderCreateResItem> orderCreateResponseItemList;
 
     @Getter
     @Builder
     @AllArgsConstructor
-    public static class OrderCreateResponseItem {
+    public static class OrderCreateResItem {
         private final String prdNo;
         private final Long payAmt;
     }

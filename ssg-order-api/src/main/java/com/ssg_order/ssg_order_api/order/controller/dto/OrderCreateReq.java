@@ -9,7 +9,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class OrderCreateRequest {
+public class OrderCreateReq {
 
     @NotEmpty
     private List<@Valid OrderCreateRequestItem> orderCreateRequestItemList;

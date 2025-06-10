@@ -7,7 +7,7 @@ import lombok.Getter;
 @Getter
 @Builder
 @AllArgsConstructor
-public class OrderCancelResponse {
+public class OrderCancelRes {
 
     private final String prdNo;
     private final String prdNm;

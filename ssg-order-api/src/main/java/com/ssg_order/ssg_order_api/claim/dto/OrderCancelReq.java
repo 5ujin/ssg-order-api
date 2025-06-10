@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
-public class OrderCancelRequest {
+public class OrderCancelReq {
     @NotBlank
     private final String ordNo;
 
