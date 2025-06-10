@@ -2,7 +2,9 @@ package com.ssg_order.ssg_order_api.order.service;
 
 import com.ssg_order.ssg_order_api.common.util.OrderNoGenerator;
 import com.ssg_order.ssg_order_api.order.controller.dto.OrderCreateReq;
+import com.ssg_order.ssg_order_api.order.controller.dto.OrderCreateReqItem;
 import com.ssg_order.ssg_order_api.order.controller.dto.OrderCreateRes;
+import com.ssg_order.ssg_order_api.order.controller.dto.OrderCreateResItem;
 import com.ssg_order.ssg_order_api.order.entity.Order;
 import com.ssg_order.ssg_order_api.order.model.OrderStatus;
 import com.ssg_order.ssg_order_api.order.repository.OrderItemHistoryRepository;
@@ -58,10 +60,10 @@ class OrderServiceTest {
         long totalPayAmt = payAmt1 + payAmt2; // 15,200
 
         // 요청 DTO
-        OrderCreateReq.OrderCreateRequestItem item1 = new OrderCreateReq.OrderCreateRequestItem();
+        OrderCreateReqItem item1 = new OrderCreateReqItem();
         item1.setPrdNo(prdNo1);
         item1.setOrdQty(ordQty1);
-        OrderCreateReq.OrderCreateRequestItem item2 = new OrderCreateReq.OrderCreateRequestItem();
+        OrderCreateReqItem item2 = new OrderCreateReqItem();
         item2.setPrdNo(prdNo2);
         item2.setOrdQty(ordQty2);
         OrderCreateReq req = new OrderCreateReq();
@@ -113,11 +115,11 @@ class OrderServiceTest {
         assertThat(res.getTotalSalePrice()).isEqualTo(totalSalePrice);
 
         // 항목별 응답 검증
-        List<OrderCreateRes.OrderCreateResItem> items = res.getOrderCreateResponseItemList();
+        List<OrderCreateResItem> items = res.getOrderCreateResponseItemList();
         assertThat(items).hasSize(2);
 
         Map<String, Long> payAmtMap = items.stream()
-                .collect(Collectors.toMap(OrderCreateRes.OrderCreateResItem::getPrdNo, OrderCreateRes.OrderCreateResItem::getPayAmt));
+                .collect(Collectors.toMap(OrderCreateResItem::getPrdNo, OrderCreateResItem::getPayAmt));
 
         assertThat(payAmtMap.get(prdNo1)).isEqualTo(payAmt1);
         assertThat(payAmtMap.get(prdNo2)).isEqualTo(payAmt2);

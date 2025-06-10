@@ -19,14 +19,4 @@ public class OrderCreateRes {
     private final Long totalPayAmt;
     @Schema(description = "주문상세리스트", example = "[{\"prdNo\": \"1000000002\", \"payAmt\": 7400}, {\"prdNo\": \"1000000005\", \"payAmt\": 7800}]")
     private List<OrderCreateResItem> orderCreateResponseItemList;
-
-    @Getter
-    @Builder
-    @AllArgsConstructor
-    public static class OrderCreateResItem {
-        @Schema(description = "상품번호", example = "1000000003")
-        private final String prdNo;
-        @Schema(description = "결제금액(실구매가)", example = "3200")
-        private final Long payAmt;
-    }
 }

@@ -3,10 +3,7 @@ package com.ssg_order.ssg_order_api.order.service;
 import com.ssg_order.ssg_order_api.common.exception.BusinessException;
 import com.ssg_order.ssg_order_api.common.exception.ErrorCode;
 import com.ssg_order.ssg_order_api.common.util.OrderNoGenerator;
-import com.ssg_order.ssg_order_api.order.controller.dto.OrderCreateReq;
-import com.ssg_order.ssg_order_api.order.controller.dto.OrderCreateRes;
-import com.ssg_order.ssg_order_api.order.controller.dto.OrderListReq;
-import com.ssg_order.ssg_order_api.order.controller.dto.OrderListRes;
+import com.ssg_order.ssg_order_api.order.controller.dto.*;
 import com.ssg_order.ssg_order_api.order.entity.Order;
 import com.ssg_order.ssg_order_api.order.entity.OrderItem;
 import com.ssg_order.ssg_order_api.order.entity.OrderItemHistory;
@@ -48,7 +45,7 @@ public class OrderServiceImpl implements OrderService{
     @Transactional
     public OrderCreateRes createOrder(OrderCreateReq orderCreateReq) {
         try {
-            List<OrderCreateReq.OrderCreateRequestItem> orderCreateRequestItemList = orderCreateReq.getOrderCreateRequestItemList();
+            List<OrderCreateReqItem> orderCreateRequestItemList = orderCreateReq.getOrderCreateRequestItemList();
 
             // 1. 유효성 검사(상품 존재 여부, 재고)
             validateProductsAndStock(orderCreateRequestItemList);
@@ -69,8 +66,8 @@ public class OrderServiceImpl implements OrderService{
         }
     }
 
-    private void validateProductsAndStock(List<OrderCreateReq.OrderCreateRequestItem> itemList) {
-        for (OrderCreateReq.OrderCreateRequestItem item : itemList) {
+    private void validateProductsAndStock(List<OrderCreateReqItem> itemList) {
+        for (OrderCreateReqItem item : itemList) {
             Product product = productRepository.findByPrdNo(item.getPrdNo())
                     .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_PRODUCT_NO));
 
@@ -80,7 +77,7 @@ public class OrderServiceImpl implements OrderService{
         }
     }
 
-    private List<OrderItem> saveOrder(String ordNo, List<OrderCreateReq.OrderCreateRequestItem> orderCreateRequestItemList) {
+    private List<OrderItem> saveOrder(String ordNo, List<OrderCreateReqItem> orderCreateRequestItemList) {
         List<OrderItem> orderItemList = new ArrayList<>();
         long totalPayAmt = 0L;
 
@@ -97,7 +94,7 @@ public class OrderServiceImpl implements OrderService{
 
         // 주문 상세 저장
         int index = 1; // 주문상세번호 채번용
-        for (OrderCreateReq.OrderCreateRequestItem item: orderCreateRequestItemList) {
+        for (OrderCreateReqItem item: orderCreateRequestItemList) {
             Product product = productRepository.findByPrdNo(item.getPrdNo())
                     .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_PRODUCT_NO));
 
@@ -141,8 +138,8 @@ public class OrderServiceImpl implements OrderService{
     }
 
     private OrderCreateRes buildOrderResponse(String ordNo, List<OrderItem> orderItemList) {
-        List<OrderCreateRes.OrderCreateResItem> orderCreateResponseItemList = orderItemList.stream()
-                .map(item -> OrderCreateRes.OrderCreateResItem.builder()
+        List<OrderCreateResItem> orderCreateResponseItemList = orderItemList.stream()
+                .map(item -> OrderCreateResItem.builder()
                         .prdNo(item.getPrdNo())
                         .payAmt(item.getPayAmt())
                         .build())
@@ -200,13 +197,14 @@ public class OrderServiceImpl implements OrderService{
             List<OrderItem> orderItemList = order.getOrderItems();
 
             // 3. 응닶값 빌드
-            List<OrderListRes.OrderProductResItem> productResItems = orderItemList.stream()
+            List<OrderProductResItem> productResItems = orderItemList.stream()
                     .map(item -> {
                         Product product = productRepository.findByPrdNo(item.getPrdNo())
                                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_PRODUCT_NO));
-                        return OrderListRes.OrderProductResItem.builder()
+                        return OrderProductResItem.builder()
                                 .prdNo(product.getPrdNo())
                                 .prdNm(product.getPrdName())
+                                .ordDtlStatus(item.getOrdDtlStatus())
                                 .ordQty(item.getOrdQty())
                                 .payAmt(item.getPayAmt())
                                 .build();

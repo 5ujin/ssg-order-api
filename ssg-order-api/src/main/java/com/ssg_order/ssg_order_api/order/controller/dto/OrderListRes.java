@@ -37,18 +37,4 @@ public class OrderListRes {
                     ]"""
     )
     private final List<OrderProductResItem> orderProductResItemList;
-
-    @Getter
-    @Builder
-    @AllArgsConstructor
-    public static class OrderProductResItem {
-        @Schema(description = "상품번호", example = "1000000003")
-        private final String prdNo;
-        @Schema(description = "상품명", example = "바나나 한 송이")
-        private final String prdNm;
-        @Schema(description = "주문수량", example = "1")
-        private final int ordQty;
-        @Schema(description = "결제금액", example = "3200")
-        private final Long payAmt;
-    }
 }
