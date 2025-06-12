@@ -247,3 +247,55 @@ test/
 > 고객의 보유 포인트 및 할인 쿠폰에 대한 검증을 강화하고, PG 결제 시 별도의 PG 세션을 관리함으로써 주문 프로세스를 더욱 견고하게 만들 수 있습니다.
 
 ※ 이외에도 많은 개선점이 존재합니다!
+
+### 5. 테스트 사전준비
+
+#### 5.1 상품 정보 INSERT
+
+```sql
+INSERT INTO pd_products_base
+  (prd_no, prd_name, sale_price, discount_price, stock, creator, created_at, updater, updated_at, version)
+VALUES
+  ('1000000001', '이마트 생수',        800,  100, 1000, 'sujin', NOW(), 'sujin', NOW(), 0),
+  ('1000000002', '신라면 멀티팩',    4200, 500,  500,  'sujin', NOW(), 'sujin', NOW(), 0),
+  ('1000000003', '바나나 한 송이',   3500, 300,  200,  'sujin', NOW(), 'sujin', NOW(), 0),
+  ('1000000004', '삼겹살 500g',     12000,2000,  100,  'sujin', NOW(), 'sujin', NOW(), 0),
+  ('1000000005', '오리온 초코파이',   3000, 400,  300,  'sujin', NOW(), 'sujin', NOW(), 0);
+```
+
+####  5.2 Postman 파라미터
+
+- 주문생성( POST)
+
+```json
+{
+    "orderCreateRequestItemList": [
+        {
+            "prdNo": "1000000003",
+            "ordQty": 5
+        },
+        {
+            "prdNo": "1000000004",
+            "ordQty": 3
+        }
+    ]
+}
+```
+
+- 주문취소(POST)
+
+```json
+{
+  "ordNo": "20250610-F6A5F5", // 생성한 주문번호로 바꿔서
+  "prdNo": "1000000003"
+}
+```
+
+- 주문조회(POST)
+
+```json
+{
+  "ordNo": "20250610-F6A5F5", // 생성한 주문번호로 바꿔서
+}
+```
+
