@@ -20,8 +20,7 @@ public class ClaimController {
 
     private final ClaimService claimService;
 
-    @PostMapping("/cancelOrder")
-    @ResponseBody
+    @PatchMapping("/cancel")
     @Operation(summary = "클레임 생성", description = "주문번호와 상품번호로 클레임을 생성합니다.")
     public ResponseEntity<OrderCancelRes> cancelOrder(@RequestBody @Valid OrderCancelReq orderCancelReq) {
         // TODO: 로그인 여부 확인(세션 또는 토큰 기반)

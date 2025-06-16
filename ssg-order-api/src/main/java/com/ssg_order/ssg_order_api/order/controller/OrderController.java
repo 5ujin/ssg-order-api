@@ -22,11 +22,9 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "주문 API", description = "주문생성 및 조회")
 public class OrderController {
 
-    @Autowired
-    OrderService orderService;
+    private final OrderService orderService;
 
-    @PostMapping("/createOrder")
-    @ResponseBody
+    @PostMapping("/create")
     @Operation(summary = "주문 생성", description = "상품번호와 주문수량으로 주문을 생성합니다.")
     public ResponseEntity<OrderCreateRes> createOrder(@RequestBody @Valid OrderCreateReq orderCreateReq) {
 
@@ -39,7 +37,6 @@ public class OrderController {
     }
 
     @PostMapping("/orderList")
-    @ResponseBody
     @Operation(summary = "주문 조회", description = "주문번호로 주문리스트를 조회합니다.")
     public ResponseEntity<OrderListRes> getOrderList(@RequestBody @Valid OrderListReq orderListReq) {
         // TODO: 로그인 여부 확인(세션 또는 토큰 기반)

@@ -267,6 +267,8 @@ VALUES
 
 - 주문생성( POST)
 
+> http://localhost:8080/order/create
+
 ```json
 {
     "orderCreateRequestItemList": [
@@ -282,7 +284,9 @@ VALUES
 }
 ```
 
-- 주문취소(POST)
+- 주문취소(PATCH)
+
+> http://localhost:8080/claim/cancel
 
 ```json
 {
@@ -292,6 +296,8 @@ VALUES
 ```
 
 - 주문조회(POST)
+
+> http://localhost:8080/order/orderList
 
 ```json
 {
